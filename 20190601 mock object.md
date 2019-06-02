@@ -169,6 +169,44 @@ public class SomeService {
 겨우 할 수 있었네요. 이제 test하기 곤란한 부분(db로 접근)을 Mock으로 대체할 수 있습니다.   
 
 ## Mock을 이용해 unit test를 간단히 써요
+이제 Mock을 사용해서 수정된 SomeService에 대한 테스트 코드를 작성해 보아요.    
+이 경우는 SomeService가 UserMapper에 의존하고 있으므로, SomeService에 UserMapper의 Mock을 주입해 주면 OK입니다.   
+구체적인 테스트 코드는 아래와 같습니다.    
+```java
+ @Test
+public void getActiveUsers지정된_id에_따른_user명을_한개_취득할_수_있음() throws Exception {
+    /* setup */
+    // UserMapper userMapper = new UserMapper();  // 실제 UserMapper 클래스의 인스턴스를 그대로 사용하지는 않음.
+    UserMapper userMapper = mock(UserMapper.class); // UserMapper 클래스의 인스턴스 대신 Mock을 사용
+    SomeService suv = new SomeService(userMapper);
+    // Mock 동작을 정의: getUserNameById()와 인수=10이 함께 불려지면, 이 method는 steve를 리턴
+    when(userMapper.getUserNameById(10)).thenReturn("steve");
+
+    /* execute */
+    List<String> actual = suv.getActiveUsers(Arrays.asList(10));
+
+    /* verify */
+    assertThat(actual, is(Arrays.asList("steve")));
+}
+ ```
+DB access를 담당하는 UserMapper 클래스를 Mock으로 대체했기에, DB접속을 할수 없는 환경에서도 문제없이 작동합니다.   
+이렇게 Mock을 사용해 주면, 불필요한 처리를 생략하여 꼭 test하고 싶은 내용만 test code로 작성할 수 있어요.
+    
+## unit test와 설계 사이의 관계
+아까 말한 의존하는 인스턴스를 외부로부터 주입하는 설계는, 일반적으로 DI(Dependency Injection)로 알려져 있습니다.    
+DI container도 다수 존재하고 있어, 유명 Framework로 Spring 등을 들 수 있어요.  
+DI가 가능하도록 설계하면, unit test에서 Mock을 용이하게 주입할 수 있어 test code를 짜기가 매우 쉬워집니다.    
+반대로, test code를 짜기 어렵다고 느낀다면, product code 설계에서 개선될 부분이 존재할 가능성이 높습니다.   
+unit test에 의해 설계의 품질이 향상된다는 말은 바로 이 점을 가리키고 있습니다.    
+
+## 끝마치며
+본고에서 unit test를 간단하게 하기 위해 Mock을 사용하는 방법을 소개했습니다.    
+도중에 설계에 관한 내용도 몇 번 나옵니다. 그 이유는 unit test를 쓴다는 의미에 설계작업을 하는 의미도 담겨 있기 때문입니다.   
+unit test의 용이성과 클래스를 사용하기 편리한 정도는 대부분의 경우 동일한 의미입니다.   
+이번 예에서는 java언어를 사용했습니다만, 대부분의 언어에 이 사고방식을 통용할 수 있습니다.   
+여러분들, product code를 짤 때 '이번 코드의 테스트는 어떻게 짜야 좋을까'를 의식하면서 설계하는 건 어떤가요?   
+
+
 
 
 
