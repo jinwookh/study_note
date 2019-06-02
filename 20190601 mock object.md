@@ -128,6 +128,49 @@ test case의 사전 조건을 용이하게 정돈할 수 있습니다.
 예로, 새롭게 위임한 class를 UserMapper class라고 합시다.
    
 실제로 수정하면 이하와 같이 됩니다.    
+```java
+public class SomeService {
+ 
+    // 지정한 id list로부터 user의 이름 list를 취득
+    public List<String> getActiveUsers(List<Integer> ids) {
+        final UserMapper userMapper = new UserMapper(); // DB access하는 부분을 별도의 class로 위임
+        final List<String> userNames = new ArrayList<>();
+        for (int id : ids) {
+            userNames.add(userMapper.getUserNameById(id));
+        }
+        return userNames;
+    }
+}
+```
+이것으로 귀찮은 DB access하는 부분은 별도의 class에 있게 됬으므로, 간단히 테스트를 쓸 수 있....을 수 없군요.    
+이렇게 UserMapper를 생성하는 부분이 클래스 안에 있게 되면, UserMapper 인스턴스화시 결국 DB로 접근하게 되어 Mock으로 UserMapper를 대체할 수 없습니다.   
+
+## 의존하는 object는 외부로부터 주입되도록 합시다
+그렇다면 UserMapper object를 인스턴스화하는 부분을 클래스 외부로 빼 버립시다.    
+즉, SomeService를 사용하는 측에서 UserMapper를 인스턴스화하여, 그것을 SomeService에 주입해 주기로 해요. 생성자를 사용하여 주입해도 좋아요.    
+```java
+public class SomeService {
+    private final UserMapper userMapper;
+
+    public SomeService(UserMapper userMapper) {
+        this.userMapper = userMapper; // 외부로부터 이미 생성된 인스턴스를 Someservice 생성자를 통해 주입
+    }
+
+    // 지정된 id list로부터 이름 list를 취득
+    public List<String> getActiveUsers(List<Integer> ids) {
+        final List<String> userNames = new ArrayList<>();
+        for (int id : ids) {
+            userNames.add(userMapper.getUserNameById(id));
+        }
+        return userNames;
+    }
+}
+```
+겨우 할 수 있었네요. 이제 test하기 곤란한 부분(db로 접근)을 Mock으로 대체할 수 있습니다.   
+
+## Mock을 이용해 unit test를 간단히 써요
+
+
 
 
 
