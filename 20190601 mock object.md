@@ -15,7 +15,7 @@ product code 에 따라서 테스트 코드 짜실 때 꽤 고생하실 수도 �
 그래서 이번에는 테스트에 초점을 맞춰, 테스트 코드를 쉽게 쓸 수 있는 mock을 이용하는 방법을 소개해 보려고 해요.    
 저는 GMO MARS DMP에서 개발 및 운용을 담당하고 있고, 오늘 소개하는 내용은 보통 업무 때 실천하는 내용입니다.    
 언어는 JAVA로, 프레임워크는 JUnit을 사용하겠습니다.
-
+       
 ## unit test를 씁시다
 우선 unit test를 쓰는 의의를 다시 생각해 봅시다. 본론으로 들어가기 전, 조금만 기다려 주세요.    
 unit test를 씀으로써 가장 기대되는 점은, 역시 품질의 향상이겠죠.    
@@ -56,6 +56,80 @@ public class SomeService {
     }
 }
 ```
+이 클래스의 unit test를 하려면, 자신의 locl 환경에 db를 만들거나 db접속을 설정해야한다는 사실을 알 수 있습니다.   
+또한, 실제 unit test를 실행시키면, db와의 접속이나 test data 투입에 꽤 많은 시간이 걸립니다.    
+
+## Mock을 씁시다
+이런 경우에, Mock을 쓰면 능히 해결할 수 있습니다.   
+Mock은, 단순히 말해서 클래스의 동작을 simulate하기 위한 object입니다.   
+test 대상 클래스가 호출하고 있는(의존하고 있는) 클래스를 Mock으로 바꿔, Mock의 동작 내용을 정의함으로써,     
+원하는 테스트의 조건을 용이하게 만들 수 있습니다.    
+    
+Mock을 다루는 library는 각 언어마다 존재하고 있습니다만, Java언어에서는 Mockito library가 유명합니다.     
+Mockito는 1 버전과 2 버전이 존재하지만, 여기에서는 1 버전을 다루겠습니다.
+     
+실제 아래와 같은 느낌으로 Mockito를 사용합니다.    
+     
+Product code는 다음과 같아요.    
+```java
+public class MockSample {
+    private final SampleService sampleService;
+ 
+    public MockSample(SampleService sampleService) {
+        this.sampleService = sampleService;
+    }
+ 
+    public int validate(int id) {
+        if (sampleService.isSomething(id)) return -1;
+        return id;
+    }
+ 
+}
+```
+test code는 다음과 같아요.
+```java
+import org.junit.Test;
+import static org.hamcrest.CoreMatchers.*;
+import static org.mockito.Mockito.*;
+// ～～생략
+    @Test
+    public void testSample() throws Exception {
+        /* set up */
+        SampleService sampleService = mock(SampleService.class);  // 8행
+        MockSample suv = new MockSample(sampleService);
+        // Mock의 동작을 정의
+        when(sampleService.isSomething(100)).thenReturn(true);    // 11행
+        
+        /* execute */
+        int actual = suv.validate(100);
+ 
+        /* verify */
+        assertThat(actual, is(-1));         //    17행
+ 
+    }
+```
+test code의 8행에서 Mock object를 생성하고 있고, 11행에서 Mock의 동작을 정의하고 있어요.    
+11행에 보면 'isSomething() method와 인수 100이 불려졌을 때 true를 리턴한다'는 동작이 정의되어 있어요.    
+그리고 17행에서, isSomething(100)이 true를 리턴한다는 가정 하에 test 대상 method가 정확히 -1을 리턴하는지 테스트합니다.   
+   
+이와 같이, Mock를 사용하면 test 대상 클래스가 의존하는 class의 동작을 simulate하여,    
+test case의 사전 조건을 용이하게 정돈할 수 있습니다.    
+
+## Mock를 실제로 사용해 보면
+그럼 아까 말한 SomeService class의 test code를 Mock을 이용해 작성해 보죠.    
+당장 의존하고 있는 class를 Mock으로 바꿔 줍시다!....하지만 의존하는 클래스가 없군요.    
+그렇다면 mock으로 바꿀 수가 없습니다.    
+    
+이런 경우는 특히 legacy code에서 자주 발생합니다.   
+이하의 순서에 따라 product code를 수정하여, Mock으로 바꿀 수 있는 설계를 해 보아요.   
+
+## 책임 외의 처리는 다른 클래스로 위임합시다
+우선 DB에 access하고 있는 부분은 SomeService의 책임이 아니므로, 별도의 클래스로 위임해 버립시다.   
+예로, 새롭게 위임한 class를 UserMapper class라고 합시다.
+   
+실제로 수정하면 이하와 같이 됩니다.    
+
+
 
 
 
