@@ -1,0 +1,4 @@
+## annonymous class
+- modthodA(() -> Arrays.asList(1,2,3,4,5,6)) : 1,2,3,4,5,6 리스트를 리턴하는 익명 클래스를 순간 만들어서 method A의 매개변수로보낸다.
+- 만약 methodA(LottoResult lottoResult)로 정의되었다면, modthodA(() -> Arrays.asList(1,2,3,4,5,6)) 코드는 1,2,3,4,5,6 리스트를 리턴하는 
+LottoResult 클래스를 methodA 매개변수로 보낸다.
