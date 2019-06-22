@@ -1,0 +1,5 @@
+# 강의
+- presentation layer application layer domain layer infrastructure layer
+- presentation lyaer : manages client session, controls display layer, show the result to client
+- application layer : get domain instance from repository, and use domain repository, don't do the main logic, 
+just ask the domain model to do the logic
